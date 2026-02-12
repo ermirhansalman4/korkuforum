@@ -2418,8 +2418,10 @@ async function register() {
 
 // ===== LOGIN =====
 async function login() {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+    const username = document.getElementById("registerUsername").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
+
 
     if (!email || !password) {
         showToast("Lütfen tüm alanları doldurunuz!");
