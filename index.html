@@ -6,7 +6,8 @@
 <title>Korku Hikayeleri Forumu</title>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@8.6.0/dist/appwrite.min.js"></script>
+
 
 <style>
 * {
@@ -2373,13 +2374,13 @@ GitHub
 <script>
 const { Client, Account, Databases, ID } = Appwrite;
 
-const client = new Client()
+const client = new Appwrite.Client()
     .setEndpoint("https://cloud.appwrite.io/v1")
     .setProject("698ddf380033ce2ca5d7");
     
     
 
-const account = new Account(client);
+const account = new Appwrite.Account(client);
 const databases = new Databases(client);
 
 const DATABASE_ID = "698de2e0003c0f3283ae";
@@ -2400,12 +2401,11 @@ async function register() {
     }
 
     try {
-        // Appwrite’a kullanıcı oluştur
         await account.create(
-            Appwrite.ID.unique(),
+            Appwrite.ID.unique(), // benzersiz kullanıcı ID
             email,
             password,
-            username // burada kullanıcı adını displayName olarak kaydediyoruz
+            username // displayName olarak kaydediliyor
         );
 
         showToast("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
@@ -2418,35 +2418,39 @@ async function register() {
 
 // ===== LOGIN =====
 async function login() {
-    const email = document.getElementById('loginEmail').value.trim(); // login email input
-    const password = document.getElementById('loginPassword').value;
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
 
     if (!email || !password) {
-        showToast('Lütfen tüm alanları doldurunuz!');
+        showToast("Lütfen tüm alanları doldurunuz!");
         return;
     }
 
     try {
-        // Email + password ile giriş yap
-        await account.createEmailPasswordSession(email, password);
+        // 8.6.0 sürümünde login
+        await account.createSession(email, password);
 
-        // Kullanıcı bilgilerini al
         const user = await account.get();
-
-        // UI ve localStorage güncelle
         app.currentUser = user;
         app.save();
         app.updateUI();
         toggleAuth();
 
-        // Artık kullanıcı adını gösteriyoruz
         showToast(`Hoşgeldiniz ${user.name || email}!`);
-
     } catch (error) {
-        showToast('Giriş hatası: ' + error.message);
+        showToast("Giriş hatası: " + error.message);
     }
 }
 
+// ===== LOGOUT =====
+async function logout() {
+    try {
+        await account.deleteSession("current");
+        location.reload();
+    } catch (error) {
+        showToast("Çıkış hatası: " + error.message);
+    }
+}
 
 </script>
 
