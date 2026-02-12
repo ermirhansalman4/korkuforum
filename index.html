@@ -1153,13 +1153,20 @@
         // ===== VERİ YÖNETİMİ =====
         class ForumApp {
             constructor() {
-                this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
                 this.users = JSON.parse(localStorage.getItem('users')) || [];
                 
                 // İlk kez ise admin hesabı ekle
                 if (this.users.length === 0) {
-                    this.users.push({ username: 'admin', email: 'admin@forum.com', password: 'sshs693434' });
+                    this.users.push({ username: 'admin', email: 'admin@forum.com', password: 'admin123' });
                 }
+                
+                // currentUser yoksa admin olarak otomatik giriş yap
+                let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (!currentUser) {
+                    currentUser = { username: 'admin', email: 'admin@forum.com', password: 'admin123' };
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                this.currentUser = currentUser;
                 
                 this.allStories = JSON.parse(localStorage.getItem('stories')) || this.getInitialStories();
                 this.stories = this.allStories.slice(); // Açıkça kopyala
