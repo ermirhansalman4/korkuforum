@@ -431,6 +431,11 @@
             color: #ff4444;
         }
 
+        .action-btn.saved {
+            background: rgba(255, 200, 0, 0.3);
+            color: #ffcc00;
+        }
+
         /* Hikaye Detay */
         .story-detail {
             max-width: 900px;
@@ -917,13 +922,45 @@
         /* Responsive */
         @media (max-width: 768px) {
             nav {
-                flex-direction: column;
-                gap: 1rem;
+                flex-direction: row;
+                gap: 0.5rem;
+                padding: 0.8rem 1rem;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+                order: 1;
             }
 
             .nav-menu {
-                gap: 1rem;
-                font-size: 0.9rem;
+                order: 3;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                flex-direction: column;
+                gap: 0;
+                background: rgba(10, 10, 10, 0.95);
+                border-top: 2px solid #8b0000;
+                padding: 1rem;
+                display: none;
+                margin: 0;
+            }
+
+            .nav-menu.mobile-open {
+                display: flex;
+            }
+
+            .nav-menu a {
+                padding: 0.8rem;
+                border-bottom: 1px solid #333;
+            }
+
+            #hamburgerBtn {
+                order: 2;
+                display: block !important;
             }
 
             .hero h1 {
@@ -958,12 +995,15 @@
         <div class="logo" onclick="showPage('home')">
             <i class="fas fa-ghost"></i> Korku Forumu
         </div>
-        <ul class="nav-menu">
-            <li><a href="#" onclick="showPage('home'); resetFilters(); return false;">Ana Sayfa</a></li>
-            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'newest'; filterStories(); return false;">En Yeni</a></li>
-            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'popular'; filterStories(); return false;">En Popüler</a></li>
-            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'mostCommented'; filterStories(); return false;">En Çok Yorum</a></li>
+        <ul class="nav-menu" id="mainMenu">
+            <li><a href="#" onclick="showPage('home'); resetFilters(); toggleMobileMenu(); return false;">Ana Sayfa</a></li>
+            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'newest'; filterStories(); toggleMobileMenu(); return false;">En Yeni</a></li>
+            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'popular'; filterStories(); toggleMobileMenu(); return false;">En Popüler</a></li>
+            <li><a href="#" onclick="document.getElementById('sortFilter').value = 'mostCommented'; filterStories(); toggleMobileMenu(); return false;">En Çok Yorum</a></li>
         </ul>
+        <button class="btn btn-secondary" id="hamburgerBtn" style="display: none; order: 2;" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="nav-right">
             <div id="userDisplay" class="user-info"></div>
             <button class="btn" onclick="toggleAuth()" id="authBtn">Giriş Yap</button>
@@ -1026,6 +1066,12 @@
             <button class="btn" id="addStoryBtn" style="display: none;" onclick="showAddStoryModal()">
                 <i class="fas fa-plus"></i> Hikaye Ekle
             </button>
+            <button class="btn btn-secondary" id="libraryBtn" style="display: none;" onclick="showPage('library')">
+                <i class="fas fa-bookmark"></i> Kütüphanem
+            </button>
+            <button class="btn btn-secondary" id="chatBtn" style="display: none;" onclick="showPage('chat')">
+                <i class="fas fa-comments"></i> Sohbet
+            </button>
             <div style="margin-top: 1rem; text-align: center; color: #888;">
                 <p id="loginPrompt">Hikaye eklemek için <a href="#" onclick="toggleAuth(); return false;" style="color: #ff9999; text-decoration: underline;">giriş yapın</a></p>
             </div>
@@ -1081,6 +1127,30 @@
                 <div id="commentContainer">
                     <!-- Yorumlar buraya yüklenir -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kütüphane Sayfası -->
+    <div id="library" class="page">
+        <div style="text-align: center; padding: 2rem;">
+            <h1 style="color: #ff9999; font-size: 2.5rem;"><i class="fas fa-bookmark"></i> Beğenilen Hikayeler</h1>
+        </div>
+        <div id="libraryContainer" style="max-width: 1200px; margin: 2rem auto; padding: 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Beğenilen hikayeler buraya yüklenir -->
+        </div>
+    </div>
+
+    <!-- Chat Sayfası -->
+    <div id="chat" class="page">
+        <div style="text-align: center; padding: 2rem;">
+            <h1 style="color: #ff9999; font-size: 2.5rem;"><i class="fas fa-comments"></i> Genel Sohbet</h1>
+        </div>
+        <div style="max-width: 900px; margin: 2rem auto; padding: 2rem; background: linear-gradient(135deg, rgba(20, 10, 20, 0.9), rgba(40, 20, 40, 0.9)); border: 1px solid #8b0000; border-radius: 12px; display: flex; flex-direction: column; height: 600px;">
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; margin-bottom: 1rem; border: 1px solid #8b0000; border-radius: 8px; padding: 1rem; background: rgba(10, 10, 10, 0.8);"></div>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." style="flex: 1; padding: 0.8rem; background: rgba(50, 50, 50, 0.9); border: 1px solid #8b0000; color: #e0e0e0; border-radius: 6px;" onkeypress="handleChatKeyPress(event)">
+                <button class="btn" onclick="sendChatMessage()" style="padding: 0.8rem 1.5rem;"><i class="fas fa-paper-plane"></i> Gönder</button>
             </div>
         </div>
     </div>
@@ -1256,14 +1326,19 @@
             constructor() {
                 this.users = JSON.parse(localStorage.getItem('users')) || [];
                 
-                // İlk kez ise admin hesabı ekle
+                // İlk kez ise admin ve demo hesabı ekle
                 if (this.users.length === 0) {
                     this.users.push({ 
                         username: 'admin', 
                         email: 'admin@forum.com', 
-                        password: 'sshs693434',
+                        password: 'admin123',
                         instagram: 'emirslmn_',
                         github: 'ermirhansalman4'
+                    });
+                    this.users.push({ 
+                        username: 'demo', 
+                        email: 'demo@test.com', 
+                        password: 'demo123'
                     });
                 }
                 
@@ -1276,6 +1351,8 @@
                 this.currentStoryId = null;
                 this.searchActive = false;
                 this.editingStoryId = null;
+                this.chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+                this.savedStoryIds = JSON.parse(localStorage.getItem('savedStoryIds')) || [];
                 this.init();
             }
 
@@ -1325,6 +1402,8 @@
                 const profileBtn = document.getElementById('profileBtn');
                 const logoutBtn = document.getElementById('logoutBtn');
                 const addStoryBtn = document.getElementById('addStoryBtn');
+                const libraryBtn = document.getElementById('libraryBtn');
+                const chatBtn = document.getElementById('chatBtn');
                 const loginPrompt = document.getElementById('loginPrompt');
 
                 if (this.currentUser) {
@@ -1333,6 +1412,8 @@
                     profileBtn.style.display = 'block';
                     logoutBtn.style.display = 'block';
                     addStoryBtn.style.display = 'block';
+                    libraryBtn.style.display = 'block';
+                    chatBtn.style.display = 'block';
                     loginPrompt.style.display = 'none';
                 } else {
                     userDisplay.textContent = '';
@@ -1340,6 +1421,8 @@
                     profileBtn.style.display = 'none';
                     logoutBtn.style.display = 'none';
                     addStoryBtn.style.display = 'none';
+                    libraryBtn.style.display = 'none';
+                    chatBtn.style.display = 'none';
                     loginPrompt.style.display = 'block';
                 }
             }
@@ -1349,6 +1432,8 @@
                 localStorage.setItem('stories', JSON.stringify(this.allStories));
                 localStorage.setItem('comments', JSON.stringify(this.comments));
                 localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                localStorage.setItem('chatMessages', JSON.stringify(this.chatMessages));
+                localStorage.setItem('savedStoryIds', JSON.stringify(this.savedStoryIds));
             }
 
             deleteStory(storyId) {
@@ -1474,6 +1559,9 @@
                             </button>
                             <button class="action-btn ${story.liked ? 'liked' : ''}" onclick="app.toggleLike(${story.id})">
                                 <i class="fas fa-heart"></i> ${story.likes}
+                            </button>
+                            <button class="action-btn ${this.savedStoryIds.includes(story.id) ? 'saved' : ''}" onclick="app.toggleSaveStory(${story.id})" title="Kaydet">
+                                <i class="fas fa-bookmark"></i>
                             </button>
                             ${adminButtons}
                         </div>
@@ -1886,6 +1974,93 @@
                 }
             }
 
+            addChatMessage(text) {
+                if (!this.currentUser || !text.trim()) return;
+                const msg = {
+                    id: Date.now(),
+                    author: this.currentUser.username,
+                    text: text.trim(),
+                    date: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                };
+                this.chatMessages.push(msg);
+                this.save();
+                this.renderChat();
+            }
+
+            renderChat() {
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+                container.innerHTML = '';
+                this.chatMessages.slice(-50).forEach(msg => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'margin-bottom: 1rem; padding: 0.8rem; background: rgba(100, 50, 100, 0.3); border-left: 3px solid #ff9999; border-radius: 6px;';
+                    div.innerHTML = `
+                        <div style="color: #ff9999; font-weight: bold; font-size: 0.9rem;"><i class="fas fa-user-circle"></i> ${this.escapeHtml(msg.author)}</div>
+                        <div style="color: #d0d0d0; margin-top: 0.3rem; word-break: break-word;">${this.escapeHtml(msg.text)}</div>
+                        <div style="color: #888; font-size: 0.8rem; margin-top: 0.3rem;">${msg.date}</div>
+                    `;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            }
+
+            toggleSaveStory(storyId) {
+                if (!this.currentUser) {
+                    showToast('Kaydetmek için giriş yapınız!');
+                    return;
+                }
+                const idx = this.savedStoryIds.indexOf(storyId);
+                if (idx > -1) {
+                    this.savedStoryIds.splice(idx, 1);
+                    showToast('Kütüphaneden kaldırıldı');
+                } else {
+                    this.savedStoryIds.push(storyId);
+                    showToast('Kütüphaneye eklendi');
+                }
+                this.save();
+                this.renderLibrary();
+                this.renderStories();
+            }
+
+            renderLibrary() {
+                const container = document.getElementById('libraryContainer');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                if (!this.currentUser) {
+                    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><p>Giriş yapınız</p></div>';
+                    return;
+                }
+
+                const savedStories = this.allStories.filter(s => this.savedStoryIds.includes(s.id));
+
+                if (savedStories.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><p>Henüz kaydedilmiş hikaye yok</p></div>';
+                    return;
+                }
+
+                savedStories.forEach(story => {
+                    const card = document.createElement('div');
+                    card.className = 'story-card';
+                    card.innerHTML = `
+                        <div class="story-title">${this.escapeHtml(story.title)}</div>
+                        <div class="story-preview">${this.escapeHtml(story.content.substring(0, 100))}</div>
+                        <div class="story-meta">
+                            <span class="story-author">${this.escapeHtml(story.author)}</span>
+                        </div>
+                        <div class="story-actions">
+                            <button class="action-btn" onclick="app.viewStory(${story.id})" style="flex: 1;">
+                                <i class="fas fa-eye"></i> Oku
+                            </button>
+                            <button class="action-btn saved" onclick="app.toggleSaveStory(${story.id})" style="flex: 1;">
+                                <i class="fas fa-trash"></i> Çıkar
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
             escapeHtml(text) {
                 const map = {
                     '&': '&amp;',
@@ -2059,6 +2234,16 @@
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
+            
+            // Sayfaya özel işlemler
+            if (pageName === 'library') {
+                app.renderLibrary();
+            } else if (pageName === 'chat') {
+                app.renderChat();
+            } else if (pageName === 'home') {
+                app.filterAndSortStories();
+            }
+            
             document.getElementById(pageName).classList.add('active');
 
             // Modal'ları kapat
@@ -2071,6 +2256,27 @@
                 app.renderUserProfile(app.currentUser.username);
                 showPage('userProfile');
             }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value;
+            if (text.trim()) {
+                app.addChatMessage(text);
+                input.value = '';
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                sendChatMessage();
+                event.preventDefault();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.classList.toggle('mobile-open');
         }
 
         // ===== PROFILE SEKMELER =====
