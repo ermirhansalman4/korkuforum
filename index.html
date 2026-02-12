@@ -1113,17 +1113,60 @@
         </div>
     </div>
 
+    <!-- Hikaye Düzenleme Modal -->
+    <div id="editStoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="app.closeEditStoryModal()">&times;</span>
+            <h2 style="color: #66ccff; text-align: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-edit"></i> Hikaye Düzenle
+            </h2>
+            <div class="form-group">
+                <label for="editStoryTitle">Hikaye Başlığı</label>
+                <input type="text" id="editStoryTitle" placeholder="Hikayenizin başlığı">
+            </div>
+            <div class="form-group">
+                <label for="editStoryCategory">Kategori</label>
+                <select id="editStoryCategory">
+                    <option value="Kısa Hikaye">Kısa Hikaye</option>
+                    <option value="Uzun Hikaye">Uzun Hikaye</option>
+                    <option value="Ürkütücü">Ürkütücü</option>
+                    <option value="Gizemli">Gizemli</option>
+                    <option value="Psikiyatrik">Psikiyatrik</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editStoryContent">Hikaye İçeriği</label>
+                <textarea id="editStoryContent" rows="6" placeholder="Hikayenizi buraya yazınız..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn" style="flex: 1;" onclick="app.saveEditStory()">
+                    <i class="fas fa-save"></i> Kaydet
+                </button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="app.closeEditStoryModal()">
+                    <i class="fas fa-times"></i> İptal
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== VERİ YÖNETİMİ =====
         class ForumApp {
             constructor() {
                 this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
                 this.users = JSON.parse(localStorage.getItem('users')) || [];
+                
+                // İlk kez ise admin hesabı ekle
+                if (this.users.length === 0) {
+                    this.users.push({ username: 'admin', email: 'admin@forum.com', password: 'sshs693434' });
+                }
+                
                 this.allStories = JSON.parse(localStorage.getItem('stories')) || this.getInitialStories();
                 this.stories = this.allStories.slice(); // Açıkça kopyala
                 this.comments = JSON.parse(localStorage.getItem('comments')) || [];
                 this.currentStoryId = null;
                 this.searchActive = false;
+                this.editingStoryId = null;
                 this.init();
             }
 
@@ -1199,6 +1242,81 @@
                 localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
             }
 
+            deleteStory(storyId) {
+                if (!this.currentUser) {
+                    showToast('Giriş yapınız!');
+                    return;
+                }
+
+                const story = this.allStories.find(s => s.id === storyId);
+                if (!story) return;
+
+                if (this.currentUser.username !== 'admin' && story.author !== this.currentUser.username) {
+                    showToast('Yalnızca kendi hikayelerinizi silebilirsiniz!');
+                    return;
+                }
+
+                if (confirm(`"${story.title}" hikayesini silmek istediğinize emin misiniz?`)) {
+                    this.allStories = this.allStories.filter(s => s.id !== storyId);
+                    this.stories = this.stories.filter(s => s.id !== storyId);
+                    this.comments = this.comments.filter(c => c.storyId !== storyId);
+                    this.save();
+                    this.renderStories();
+                    showToast('Hikaye silindi!');
+                }
+            }
+
+            editStory(storyId) {
+                if (!this.currentUser) {
+                    showToast('Giriş yapınız!');
+                    return;
+                }
+
+                const story = this.allStories.find(s => s.id === storyId);
+                if (!story) return;
+
+                if (this.currentUser.username !== 'admin' && story.author !== this.currentUser.username) {
+                    showToast('Yalnızca kendi hikayelerinizi düzenleyebilirsiniz!');
+                    return;
+                }
+
+                this.editingStoryId = storyId;
+                document.getElementById('editStoryTitle').value = story.title;
+                document.getElementById('editStoryCategory').value = story.category;
+                document.getElementById('editStoryContent').value = story.content;
+                document.getElementById('editStoryModal').classList.add('show');
+            }
+
+            saveEditStory() {
+                if (!this.editingStoryId) return;
+
+                const title = document.getElementById('editStoryTitle').value.trim();
+                const category = document.getElementById('editStoryCategory').value;
+                const content = document.getElementById('editStoryContent').value.trim();
+
+                if (!title || !content) {
+                    showToast('Lütfen tüm alanları doldurunuz!');
+                    return;
+                }
+
+                const story = this.allStories.find(s => s.id === this.editingStoryId);
+                if (story) {
+                    story.title = title;
+                    story.category = category;
+                    story.content = content;
+                    this.save();
+                    this.stories = this.allStories.slice();
+                    this.renderStories();
+                    this.closeEditStoryModal();
+                    showToast('Hikaye güncellendi!');
+                }
+            }
+
+            closeEditStoryModal() {
+                document.getElementById('editStoryModal').classList.remove('show');
+                this.editingStoryId = null;
+            }
+
             renderStories() {
                 const container = document.getElementById('storiesContainer');
                 container.innerHTML = '';
@@ -1220,6 +1338,20 @@
                     const commentCount = this.comments.filter(c => c.storyId === story.id).length;
                     const card = document.createElement('div');
                     card.className = 'story-card';
+                    const isAdmin = this.currentUser && (this.currentUser.username === 'admin' || story.author === this.currentUser.username);
+                    let adminButtons = '';
+                    
+                    if (isAdmin) {
+                        adminButtons = `
+                            <button class="action-btn" style="background: rgba(100, 150, 255, 0.3); color: #66ccff;" onclick="app.editStory(${story.id})" title="Düzenle">
+                                <i class="fas fa-edit"></i> Düzenle
+                            </button>
+                            <button class="action-btn" style="background: rgba(255, 100, 100, 0.3); color: #ff6666;" onclick="app.deleteStory(${story.id})" title="Sil">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                        `;
+                    }
+                    
                     card.innerHTML = `
                         <div class="story-title">${this.escapeHtml(story.title)}</div>
                         <div class="story-preview">${this.escapeHtml(story.content.substring(0, 150))}</div>
@@ -1234,6 +1366,7 @@
                             <button class="action-btn ${story.liked ? 'liked' : ''}" onclick="app.toggleLike(${story.id})">
                                 <i class="fas fa-heart"></i> ${story.likes}
                             </button>
+                            ${adminButtons}
                         </div>
                     `;
                     container.appendChild(card);
@@ -1461,6 +1594,17 @@
                 storyComments.forEach(comment => {
                     const card = document.createElement('div');
                     card.className = 'comment-card';
+                    const isAdmin = this.currentUser && (this.currentUser.username === 'admin' || comment.author === this.currentUser.username);
+                    let adminButtons = '';
+                    
+                    if (isAdmin) {
+                        adminButtons = `
+                            <button class="comment-like" style="background: rgba(255, 100, 100, 0.3); color: #ff6666; margin-left: 0.5rem;" onclick="app.deleteComment(${comment.id})" title="Sil">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                        `;
+                    }
+                    
                     card.innerHTML = `
                         <div class="comment-header">
                             <span class="comment-author">${this.escapeHtml(comment.author)}</span>
@@ -1471,10 +1615,33 @@
                             <button class="comment-like ${comment.liked ? 'liked' : ''}" onclick="app.toggleCommentLike(${comment.id})">
                                 <i class="fas fa-heart"></i> ${comment.likes}
                             </button>
+                            ${adminButtons}
                         </div>
                     `;
                     container.appendChild(card);
                 });
+            }
+
+            deleteComment(commentId) {
+                if (!this.currentUser) {
+                    showToast('Giriş yapınız!');
+                    return;
+                }
+
+                const comment = this.comments.find(c => c.id === commentId);
+                if (!comment) return;
+
+                if (this.currentUser.username !== 'admin' && comment.author !== this.currentUser.username) {
+                    showToast('Yalnızca kendi yorumlarınızı silebilirsiniz!');
+                    return;
+                }
+
+                if (confirm('Yorumu silmek istediğinize emin misiniz?')) {
+                    this.comments = this.comments.filter(c => c.id !== commentId);
+                    this.save();
+                    this.renderComments(this.currentStoryId);
+                    showToast('Yorum silindi!');
+                }
             }
 
             addNewComment(text) {
@@ -1830,6 +1997,10 @@
 
             document.getElementById('addStoryModal').addEventListener('click', (e) => {
                 if (e.target.id === 'addStoryModal') closeAddStoryModal();
+            });
+
+            document.getElementById('editStoryModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editStoryModal') app.closeEditStoryModal();
             });
 
             // Enter tuşu
