@@ -2084,7 +2084,7 @@ return text.replace(/[&<>"']/g, m => map[m]);
 
 /// ===== KULLANICI İŞLEMLERİ =====
 async function login() {
-    const email = document.getElementById('loginUsername').value.trim(); // GitHub Pages vs Appwrite Cloud email input
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
     if (!email || !password) {
@@ -2093,16 +2093,17 @@ async function login() {
     }
 
     try {
-        // Appwrite Cloud login
-        await account.createEmailPasswordSession(email, password);
+        // Yeni SDK'da login bu şekilde yapılır:
+        const session = await account.createSession(email, password);
 
-        const user = await account.get(); // giriş yapan kullanıcı bilgisi
-        app.currentUser = user; // mevcut kullanıcıyı kaydetmek için
-        app.save();             // kendi localStorage veya state fonksiyonun
-        app.updateUI();         // UI güncelleme
-        toggleAuth();           // auth toggle (login/logout görünümü)
+        const user = await account.get();
+        app.currentUser = user;
+        app.save();
+        app.updateUI();
+        toggleAuth();
+
         showToast(`Hoşgeldiniz ${user.name || email}!`);
-        
+
     } catch (error) {
         showToast('Giriş hatası: ' + error.message);
     }
@@ -2114,31 +2115,30 @@ document.getElementById('loginUsername').value = '';
 document.getElementById('loginPassword').value = '';
 
 
-function register() {
-const username = document.getElementById('registerUsername').value.trim();
-const email = document.getElementById('registerEmail').value.trim();
-const password = document.getElementById('registerPassword').value;
+async function register() {
+    const username = document.getElementById("registerUsername").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
 
-if (!username || !email || !password) {
-showToast('Lütfen tüm alanları doldurunuz!');
-return;
-}
+    if (!username || !email || !password) {
+        showToast("Lütfen tüm alanları doldurunuz!");
+        return;
+    }
 
-if (password.length < 6) {
-showToast('Şifre en az 6 karakter olmalıdır!');
-return;
-}
+    try {
+        await account.create(
+            Appwrite.ID.unique(),
+            email,
+            password,
+            username // displayName olarak kaydediliyor
+        );
 
-if (app.users.find(u => u.username === username)) {
-showToast('Bu kullanıcı adı zaten kullanılıyor!');
-return;
-}
+        showToast("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+        toggleAuth();
 
-app.users.push({ username, email, password });
-app.save();
-showToast('Kayıt başarılı! Lütfen giriş yapınız.');
-switchAuthForm();
-
+    } catch (error) {
+        showToast("Hata: " + error.message);
+    }
 // Formu temizle
 document.getElementById('registerUsername').value = '';
 document.getElementById('registerEmail').value = '';
