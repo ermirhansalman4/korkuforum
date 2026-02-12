@@ -6,6 +6,10 @@
     <title>Korku Hikayeleri Forumu</title>
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         * {
             margin: 0;
@@ -1321,6 +1325,26 @@
     </div>
 
     <script>
+        // ===== SUPABASE SETUP =====
+        const SUPABASE_URL = 'https://zwgehkmjdhxqxblefqan.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z2Voa21qZGh4cXhibGVmcWFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4OTg1MzgsImV4cCI6MjA4NjQ3NDUzOH0.BsIcnsERQYlYFkupxOcVgd5fwlnSjOOammjNTAxux_s';
+        
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let dbReady = false;
+        let unsubscribe = null;
+
+        // Supabase bağlantı kontrolü
+        supabase.from('stories').select('count').then((res) => {
+            if (!res.error) {
+                dbReady = true;
+                console.log('✅ Supabase bağlantı başarılı');
+            }
+        }).catch(err => {
+            console.log('⚠️ Supabase kurulunamadı:', err);
+        });
+
         // ===== VERİ YÖNETİMİ =====
         class ForumApp {
             constructor() {
@@ -1345,7 +1369,9 @@
                 // currentUser yoksa null - giriş yapması gerek
                 this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
                 
-                this.allStories = JSON.parse(localStorage.getItem('stories')) || this.getInitialStories();
+                // Hikayeler: localStorage'de varsa ve boş değilse al, yoksa başlangıçtan yükle
+                let storedStories = JSON.parse(localStorage.getItem('stories')) || [];
+                this.allStories = storedStories.length > 0 ? storedStories : this.getInitialStories();
                 this.stories = this.allStories.slice(); // Açıkça kopyala
                 this.comments = JSON.parse(localStorage.getItem('comments')) || [];
                 this.currentStoryId = null;
@@ -1353,7 +1379,78 @@
                 this.editingStoryId = null;
                 this.chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
                 this.savedStoryIds = JSON.parse(localStorage.getItem('savedStoryIds')) || [];
+                
+                // Firebase sync başlat
+                if (firebaseReady) {
+                    this.syncFirebase();
+                } else {
+                    this.init();
+                }
+            }
+
+            syncFirebase() {
+                // Supabase'den hikayeler dinle (Real-time)
+                if (dbReady) {
+                    supabase.from('stories').on('*', (payload) => {
+                        this.loadStoriesFromSupabase();
+                    }).subscribe();
+
+                    supabase.from('comments').on('*', (payload) => {
+                        this.loadCommentsFromSupabase();
+                    }).subscribe();
+
+                    supabase.from('chat').on('*', (payload) => {
+                        this.loadChatFromSupabase();
+                    }).subscribe();
+
+                    // İlk yükle
+                    this.loadStoriesFromSupabase();
+                    this.loadCommentsFromSupabase();
+                    this.loadChatFromSupabase();
+                }
+                
                 this.init();
+            }
+
+            async loadStoriesFromSupabase() {
+                if (!dbReady) return;
+                const { data, error } = await supabase
+                    .from('stories')
+                    .select('*')
+                    .order('id', { ascending: false });
+                
+                if (!error && data) {
+                    this.allStories = data;
+                    localStorage.setItem('stories', JSON.stringify(this.allStories));
+                    this.stories = this.allStories.slice();
+                    this.renderStories();
+                }
+            }
+
+            async loadCommentsFromSupabase() {
+                if (!dbReady) return;
+                const { data, error } = await supabase
+                    .from('comments')
+                    .select('*');
+                
+                if (!error && data) {
+                    this.comments = data;
+                    localStorage.setItem('comments', JSON.stringify(this.comments));
+                }
+            }
+
+            async loadChatFromSupabase() {
+                if (!dbReady) return;
+                const { data, error } = await supabase
+                    .from('chat')
+                    .select('*')
+                    .order('id', { ascending: false })
+                    .limit(50);
+                
+                if (!error && data) {
+                    this.chatMessages = data.reverse();
+                    localStorage.setItem('chatMessages', JSON.stringify(this.chatMessages));
+                }
             }
 
             getInitialStories() {
@@ -1362,7 +1459,7 @@
                         id: 1,
                         title: "Eski Evin Sırrı",
                         content: "Yeni taşındığım evin bodrum katında bir oda buldum. Kapısı kilitliydi. Her gece oradan garip sesler geliyordu. Merakla kilit açmaya çalıştım. Kapı açıldı ve içeride... (Devamını görmek için tıklayın)",
-                        author: "Admin",
+                        author: "admin",
                         category: "Gizemli",
                         date: new Date(Date.now() - 86400000 * 2).toLocaleString('tr-TR'),
                         likes: 15,
@@ -1372,7 +1469,7 @@
                         id: 2,
                         title: "Ödenmeyen Borç",
                         content: "Bir gece, kapıma tuhaf bir mektup içeri geçti. 'Borcunuz ödenmeyecek. Bedeli çok ağır olacak' yazıyordu. Ne borcum vardı ne bilemiyordum fakat bitti. Ertesi gün, benimle aynı adı taşıyan ölü bulundu.\n\nMektup devam ediyordu...",
-                        author: "Admin",
+                        author: "admin",
                         category: "Ürkütücü",
                         date: new Date(Date.now() - 86400000).toLocaleString('tr-TR'),
                         likes: 8,
@@ -1382,7 +1479,7 @@
                         id: 3,
                         title: "Aynada Gördüğüm Şey",
                         content: "Sabah aynaya baktığımda yüzümü tanımadım. Tam benim gibi, ama gözleri farklıydı. Çok eski görünüyordu. Elleriyle bana dokunmaya çalıştı... Ve ben geriye adım attığımda ayna patladı.",
-                        author: "Admin",
+                        author: "admin",
                         category: "Kısa Hikaye",
                         date: new Date(Date.now() - 86400000 * 3).toLocaleString('tr-TR'),
                         likes: 22,
@@ -1451,12 +1548,25 @@
                 }
 
                 if (confirm(`"${story.title}" hikayesini silmek istediğinize emin misiniz?`)) {
-                    this.allStories = this.allStories.filter(s => s.id !== storyId);
-                    this.stories = this.stories.filter(s => s.id !== storyId);
-                    this.comments = this.comments.filter(c => c.storyId !== storyId);
-                    this.save();
-                    this.renderStories();
-                    showToast('Hikaye silindi!');
+                    // Supabase'den sil
+                    if (dbReady) {
+                        supabase.from('stories').delete().eq('id', storyId).then(({ error }) => {
+                            if (error) {
+                                console.log('⚠️ Silme hatası:', error);
+                                showToast('Hikaye silinemedi!');
+                            } else {
+                                showToast('Hikaye silindi!');
+                            }
+                        });
+                    } else {
+                        // Supabase yoksa localStorage'den sil
+                        this.allStories = this.allStories.filter(s => s.id !== storyId);
+                        this.stories = this.stories.filter(s => s.id !== storyId);
+                        this.comments = this.comments.filter(c => c.storyId !== storyId);
+                        this.save();
+                        this.renderStories();
+                        showToast('Hikaye silindi!');
+                    }
                 }
             }
 
@@ -1495,14 +1605,31 @@
 
                 const story = this.allStories.find(s => s.id === this.editingStoryId);
                 if (story) {
-                    story.title = title;
-                    story.category = category;
-                    story.content = content;
-                    this.save();
-                    this.stories = this.allStories.slice();
-                    this.renderStories();
-                    this.closeEditStoryModal();
-                    showToast('Hikaye güncellendi!');
+                    // Supabase'e güncelle
+                    if (dbReady) {
+                        supabase.from('stories')
+                            .update({ title, category, content })
+                            .eq('id', this.editingStoryId)
+                            .then(({ error }) => {
+                                if (error) {
+                                    console.log('⚠️ Güncelleme hatası:', error);
+                                    showToast('Hikaye güncellenemedi!');
+                                } else {
+                                    this.closeEditStoryModal();
+                                    showToast('Hikaye güncellendi!');
+                                }
+                            });
+                    } else {
+                        // Supabase yoksa localStorage'de güncelle
+                        story.title = title;
+                        story.category = category;
+                        story.content = content;
+                        this.save();
+                        this.stories = this.allStories.slice();
+                        this.renderStories();
+                        this.closeEditStoryModal();
+                        showToast('Hikaye güncellendi!');
+                    }
                 }
             }
 
@@ -1685,6 +1812,15 @@
                 if (story) {
                     story.liked = !story.liked;
                     story.likes += story.liked ? 1 : -1;
+                    
+                    // Supabase'e güncelle
+                    if (dbReady) {
+                        supabase.from('stories')
+                            .update({ likes: story.likes })
+                            .eq('id', storyId)
+                            .catch(err => console.log('⚠️ Like güncelleme hatası:', err));
+                    }
+                    
                     this.save();
                     this.renderStories();
                 }
@@ -1708,11 +1844,25 @@
                     liked: false
                 };
 
-                this.allStories.unshift(story);
-                this.stories = this.allStories.slice();
-                this.save();
-                this.renderStories();
-                showToast('Hikaye başarıyla paylaşıldı!');
+                // Supabase'e ekle
+                if (dbReady) {
+                    supabase.from('stories').insert([story]).then(({ error }) => {
+                        if (error) {
+                            console.log('⚠️ Hikaye yazma hatası:', error);
+                            showToast('Hikaye kaydedilemedi!');
+                        } else {
+                            showToast('Hikaye başarıyla paylaşıldı!');
+                        }
+                    });
+                } else {
+                    // Supabase yoksa localStorage'e yaz
+                    this.allStories.unshift(story);
+                    this.stories = this.allStories.slice();
+                    this.save();
+                    this.renderStories();
+                    showToast('Hikaye başarıyla paylaşıldı!');
+                }
+                
                 return true;
             }
 
@@ -1834,10 +1984,21 @@
                 }
 
                 if (confirm('Yorumu silmek istediğinize emin misiniz?')) {
-                    this.comments = this.comments.filter(c => c.id !== commentId);
-                    this.save();
-                    this.renderComments(this.currentStoryId);
-                    showToast('Yorum silindi!');
+                    // Supabase'den sil
+                    if (dbReady) {
+                        supabase.from('comments').delete().eq('id', commentId).then(({ error }) => {
+                            if (error) {
+                                console.log('⚠️ Yorum silme hatası:', error);
+                                showToast('Yorum silinemedi!');
+                            }
+                        });
+                    } else {
+                        // Supabase yoksa localStorage'den sil
+                        this.comments = this.comments.filter(c => c.id !== commentId);
+                        this.save();
+                        this.renderComments(this.currentStoryId);
+                        showToast('Yorum silindi!');
+                    }
                 }
             }
 
@@ -1863,10 +2024,24 @@
                     liked: false
                 };
 
-                this.comments.push(comment);
-                this.save();
-                this.renderComments(this.currentStoryId);
+                // Supabase'e ekle
+                if (dbReady) {
+                    supabase.from('comments').insert([comment]).then(({ error }) => {
+                        if (error) {
+                            console.log('⚠️ Yorum yazma hatası:', error);
+                            showToast('Yorum yazılamadı!');
+                            return false;
+                        }
+                    });
+                } else {
+                    // Supabase yoksa localStorage'e yaz
+                    this.comments.push(comment);
+                    this.save();
+                    this.renderComments(this.currentStoryId);
+                }
                 
+                return true;
+            }
                 const commentCount = this.comments.filter(c => c.storyId === this.currentStoryId).length;
                 document.getElementById('commentCount').textContent = commentCount;
                 
@@ -1982,9 +2157,20 @@
                     text: text.trim(),
                     date: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
                 };
-                this.chatMessages.push(msg);
-                this.save();
-                this.renderChat();
+                
+                // Supabase'e ekle
+                if (dbReady) {
+                    supabase.from('chat').insert([msg]).then(({ error }) => {
+                        if (error) {
+                            console.log('⚠️ Chat yazma hatası:', error);
+                        }
+                    });
+                } else {
+                    // Supabase yoksa localStorage'e yaz
+                    this.chatMessages.push(msg);
+                    this.save();
+                    this.renderChat();
+                }
             }
 
             renderChat() {
