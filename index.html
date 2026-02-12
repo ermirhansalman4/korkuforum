@@ -2378,22 +2378,16 @@ GitHub
 
 
 <script>
-// ===== Appwrite client =====
-const client = new Appwrite.Client()
-    .setEndpoint("https://cloud.appwrite.io/v1")
-    .setProject("698ddf380033ce2ca5d7");
+ const client = new Appwrite.Client()
+      .setEndpoint("https://cloud.appwrite.io/v1")
+      .setProject("698ddf380033ce2ca5d7");
 
-const account = new Appwrite.Account(client);
-const databases = new Appwrite.Databases(client);
+  const account = new Appwrite.Account(client);
+  const databases = new Appwrite.Databases(client);
 
-const DATABASE_ID = "698de2e0003c0f3283ae";
-const STORIES_COLLECTION_ID = "stories";
-const COMMENTS_COLLECTION_ID = "comments";
-
-// ===== Basit toast =====
-function showToast(msg) {
-    alert(msg);
-}
+  // ID artık Appwrite globalinden geliyor
+  const uniqueID = Appwrite.ID.unique(); 
+  console.log("Benzersiz ID:", uniqueID);
 
 // ===== REGISTER =====
 async function register() {
