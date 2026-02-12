@@ -1221,6 +1221,10 @@ padding: 0.8rem 1rem;
 <input type="text" id="loginUsername" placeholder="Kullanıcı adınız">
 </div>
 <div class="form-group">
+<label for="loginEmail">E-Posta</label>
+<input type="text" id="loginEmail" placeholder="E-posta adresiniz">
+</div>
+<div class="form-group">
 <label for="loginPassword">Şifre</label>
 <input type="password" id="loginPassword" placeholder="Şifreniz">
 </div>
@@ -2386,47 +2390,63 @@ const COMMENTS_COLLECTION_ID = "comments";
 
 // ===== REGISTER =====
 async function register() {
-
-    const email = document.getElementById("registerEmail").value;
+    const username = document.getElementById("registerUsername").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
     const password = document.getElementById("registerPassword").value;
 
+    if (!username || !email || !password) {
+        showToast("Lütfen tüm alanları doldurunuz!");
+        return;
+    }
+
     try {
+        // Appwrite’a kullanıcı oluştur
         await account.create(
-            ID.unique(),
+            Appwrite.ID.unique(),
             email,
             password,
-            username
+            username // burada kullanıcı adını displayName olarak kaydediyoruz
         );
 
-        alert("Kayıt başarılı! Şimdi giriş yapabilirsin.");
+        showToast("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
         toggleAuth();
     } catch (error) {
-        alert("Hata: " + error.message);
+        showToast("Hata: " + error.message);
     }
 }
+
 
 // ===== LOGIN =====
 async function login() {
-    const username = document.getElementById("loginUsername").value;
-    const password = document.getElementById("loginPassword").value;
+    const email = document.getElementById('loginEmail').value.trim(); // login email input
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+        showToast('Lütfen tüm alanları doldurunuz!');
+        return;
+    }
 
     try {
-        await account.createEmailPasswordSession(username, password);
+        // Email + password ile giriş yap
+        await account.createEmailPasswordSession(email, password);
 
+        // Kullanıcı bilgilerini al
         const user = await account.get();
-        alert("Hoşgeldin " + user.name);
-        location.reload();
+
+        // UI ve localStorage güncelle
+        app.currentUser = user;
+        app.save();
+        app.updateUI();
+        toggleAuth();
+
+        // Artık kullanıcı adını gösteriyoruz
+        showToast(`Hoşgeldiniz ${user.name || email}!`);
 
     } catch (error) {
-        alert("Giriş hatası: " + error.message);
+        showToast('Giriş hatası: ' + error.message);
     }
 }
 
-// ===== LOGOUT =====
-async function logout() {
-    await account.deleteSession("current");
-    location.reload();
-}
 
 </script>
 
