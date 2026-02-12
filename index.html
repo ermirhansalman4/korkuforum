@@ -1325,6 +1325,17 @@
     </div>
 
     <script>
+        // ===== GENEL FONKSİYONLAR =====
+        function toggleAuth() {
+            const modal = document.getElementById('authModal');
+            modal.classList.toggle('show');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.classList.toggle('mobile-open');
+        }
+
         // ===== SUPABASE SETUP =====
         const SUPABASE_URL = 'https://zwgehkmjdhxqxblefqan.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z2Voa21qZGh4cXhibGVmcWFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4OTg1MzgsImV4cCI6MjA4NjQ3NDUzOH0.BsIcnsERQYlYFkupxOcVgd5fwlnSjOOammjNTAxux_s';
@@ -1673,21 +1684,30 @@
                         `;
                     }
                     
+                    const storyId = story.id;
+                    const storyLiked = story.liked ? 'liked' : '';
+                    const storySaved = this.savedStoryIds.includes(story.id) ? 'saved' : '';
+                    const storyTitle = this.escapeHtml(story.title);
+                    const storyPreview = this.escapeHtml(story.content.substring(0, 150));
+                    const storyAuthor = this.escapeHtml(story.author);
+                    const storyDate = story.date;
+                    const storyLikes = story.likes;
+                    
                     card.innerHTML = `
-                        <div class="story-title">${this.escapeHtml(story.title)}</div>
-                        <div class="story-preview">${this.escapeHtml(story.content.substring(0, 150))}</div>
+                        <div class="story-title">${storyTitle}</div>
+                        <div class="story-preview">${storyPreview}</div>
                         <div class="story-meta">
-                            <span class="story-author">${this.escapeHtml(story.author)}</span>
-                            <span>${story.date}</span>
+                            <span class="story-author">${storyAuthor}</span>
+                            <span>${storyDate}</span>
                         </div>
                         <div class="story-actions">
-                            <button class="action-btn" onclick="app.viewStory(${story.id})">
+                            <button class="action-btn" onclick="app.viewStory(${storyId})">
                                 <i class="fas fa-eye"></i> Oku (${commentCount})
                             </button>
-                            <button class="action-btn ${story.liked ? 'liked' : ''}" onclick="app.toggleLike(${story.id})">
-                                <i class="fas fa-heart"></i> ${story.likes}
+                            <button class="action-btn ${storyLiked}" onclick="app.toggleLike(${storyId})">
+                                <i class="fas fa-heart"></i> ${storyLikes}
                             </button>
-                            <button class="action-btn ${this.savedStoryIds.includes(story.id) ? 'saved' : ''}" onclick="app.toggleSaveStory(${story.id})" title="Kaydet">
+                            <button class="action-btn ${storySaved}" onclick="app.toggleSaveStory(${storyId})" title="Kaydet">
                                 <i class="fas fa-bookmark"></i>
                             </button>
                             ${adminButtons}
@@ -2325,11 +2345,6 @@
             showToast('Çıkış yapıldı!');
         }
 
-        function toggleAuth() {
-            const modal = document.getElementById('authModal');
-            modal.classList.toggle('show');
-        }
-
         function switchAuthForm() {
             document.getElementById('loginForm').style.display = 
                 document.getElementById('loginForm').style.display === 'none' ? 'block' : 'none';
@@ -2458,11 +2473,6 @@
                 sendChatMessage();
                 event.preventDefault();
             }
-        }
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mainMenu');
-            menu.classList.toggle('mobile-open');
         }
 
         // ===== PROFILE SEKMELER =====
