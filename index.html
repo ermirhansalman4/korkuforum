@@ -640,6 +640,41 @@
             font-weight: bold;
         }
 
+        /* İletişim Bilgileri */
+        .profile-contact {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b0b0b0;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item a {
+            color: #66ccff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item a:hover {
+            color: #ff9999;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        .contact-item i {
+            color: #ff9999;
+            font-size: 1.2rem;
+        }
+
         .profile-tabs {
             display: flex;
             gap: 1rem;
@@ -799,6 +834,72 @@
             border-radius: 8px;
             border-left: 4px solid #00FF00;
             animation: slideInUp 0.3s ease;
+            z-index: 2000;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(10, 10, 10, 0.95);
+            border-top: 2px solid #8b0000;
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            box-shadow: 0 -4px 15px rgba(139, 0, 0, 0.3);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-title {
+            font-family: 'Creepster', cursive;
+            font-size: 1.5rem;
+            color: #ff9999;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b0b0b0;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid #8b0000;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .social-link i {
+            color: #ff9999;
+            font-size: 1.2rem;
+        }
+
+        .social-link:hover {
+            color: #ff9999;
+            border-color: #ff4444;
+            background: rgba(139, 0, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .footer-text {
+            color: #888;
+            font-size: 0.9rem;
+            border-top: 1px solid #333;
+            padding-top: 1.5rem;
+        }            animation: slideInUp 0.3s ease;
             z-index: 2000;
         }
 
@@ -1157,13 +1258,20 @@
                 
                 // İlk kez ise admin hesabı ekle
                 if (this.users.length === 0) {
-                    this.users.push({ username: 'admin', email: 'admin@forum.com', password: 'admin123' });
+                    this.users.push({ 
+                        username: 'admin', 
+                        email: 'admin@forum.com', 
+                        password: 'admin123',
+                        instagram: 'emirslmn_',
+                        github: 'ermirhansalman4'
+                    });
                 }
                 
                 // currentUser yoksa admin olarak otomatik giriş yap
                 let currentUser = JSON.parse(localStorage.getItem('currentUser'));
                 if (!currentUser) {
-                    currentUser = { username: 'admin', email: 'admin@forum.com', password: 'admin123' };
+                    currentUser = this.users.find(u => u.username === 'admin') || 
+                    { username: 'admin', email: 'admin@forum.com', password: 'admin123', instagram: 'emirslmn_', github: 'ermirhansalman4' };
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 }
                 this.currentUser = currentUser;
@@ -2023,5 +2131,27 @@
             app.toggleLikeStory();
         }
     </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-title">
+                <i class="fas fa-user-circle"></i> Korku Forumu Sahibi
+            </div>
+            <div class="footer-social">
+                <a href="https://instagram.com/emirslmn_" target="_blank" class="social-link" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                    Instagram
+                </a>
+                <a href="https://github.com/ermirhansalman4" target="_blank" class="social-link" title="GitHub">
+                    <i class="fab fa-github"></i>
+                    GitHub
+                </a>
+            </div>
+            <div class="footer-text">
+                <p>© 2026 Korku Hikayeleri Forumu - Tüm Hakları Saklıdır</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
