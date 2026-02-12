@@ -1325,15 +1325,212 @@
     </div>
 
     <script>
-        // ===== GENEL FONKSİYONLAR =====
+        // ===== GLOBAL FONKSİYONLAR (HTML'den çağrılan) =====
+        
         function toggleAuth() {
-            const modal = document.getElementById('authModal');
-            modal.classList.toggle('show');
+            if (typeof app !== 'undefined') {
+                const modal = document.getElementById('authModal');
+                modal.classList.toggle('show');
+            }
         }
 
         function toggleMobileMenu() {
             const menu = document.getElementById('mainMenu');
-            menu.classList.toggle('mobile-open');
+            if (menu) menu.classList.toggle('mobile-open');
+        }
+
+        function showPage(pageName) {
+            if (typeof app !== 'undefined') {
+                app.showPage(pageName);
+            }
+        }
+
+        function filterStories() {
+            if (typeof app !== 'undefined') {
+                app.filterAndSortStories();
+            }
+        }
+
+        function handleSearchInput() {
+            if (typeof app !== 'undefined') {
+                app.filterAndSortStories();
+            }
+        }
+
+        function resetFilters() {
+            if (typeof app !== 'undefined') {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('categoryFilter').value = '';
+                document.getElementById('sortFilter').value = 'newest';
+                document.getElementById('searchTypeFilter').value = 'all';
+                app.filterAndSortStories();
+            }
+        }
+
+        function addStory() {
+            if (typeof app !== 'undefined') {
+                const title = document.getElementById('storyTitle').value;
+                const category = document.getElementById('storyCategory').value;
+                const content = document.getElementById('storyContent').value;
+                if (app.addNewStory(title, category, content)) {
+                    document.getElementById('storyTitle').value = '';
+                    document.getElementById('storyContent').value = '';
+                    closeAddStoryModal();
+                    app.renderStories();
+                }
+            }
+        }
+
+        function showAddStoryModal() {
+            if (typeof app !== 'undefined') {
+                document.getElementById('addStoryModal').classList.add('show');
+            }
+        }
+
+        function closeAddStoryModal() {
+            document.getElementById('addStoryModal').classList.remove('show');
+        }
+
+        function addComment() {
+            if (typeof app !== 'undefined') {
+                const text = document.getElementById('commentText').value.trim();
+                if (app.addNewComment(text)) {
+                    document.getElementById('commentText').value = '';
+                }
+            }
+        }
+
+        function toggleLikeStory() {
+            if (typeof app !== 'undefined') {
+                app.toggleLikeStory();
+            }
+        }
+
+        function showUserProfile() {
+            if (typeof app !== 'undefined') {
+                if (app.currentUser) {
+                    app.renderUserProfile(app.currentUser.username);
+                }
+            }
+        }
+
+        function logout() {
+            if (typeof app !== 'undefined') {
+                app.currentUser = null;
+                app.save();
+                app.updateUI();
+                showPage('home');
+                showToast('Çıkış yapıldı!');
+            }
+        }
+
+        function register() {
+            if (typeof app !== 'undefined') {
+                const username = document.getElementById('registerUsername').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const password = document.getElementById('registerPassword').value;
+
+                if (!username || !email || !password) {
+                    showToast('Lütfen tüm alanları doldurunuz!');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showToast('Şifre en az 6 karakter olmalıdır!');
+                    return;
+                }
+
+                if (app.users.find(u => u.username === username)) {
+                    showToast('Bu kullanıcı adı zaten kullanılıyor!');
+                    return;
+                }
+
+                app.users.push({ username, email, password });
+                app.save();
+                showToast('Kayıt başarılı! Lütfen giriş yapınız.');
+                switchAuthForm();
+                document.getElementById('registerUsername').value = '';
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+            }
+        }
+
+        function login() {
+            if (typeof app !== 'undefined') {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                if (!username || !password) {
+                    showToast('Lütfen tüm alanları doldurunuz!');
+                    return;
+                }
+
+                const user = app.users.find(u => u.username === username);
+                if (!user || user.password !== password) {
+                    showToast('Kullanıcı adı veya şifre yanlış!');
+                    return;
+                }
+
+                app.currentUser = user;
+                app.save();
+                app.updateUI();
+                toggleAuth();
+                showToast(`Hoşgeldiniz ${username}!`);
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        function switchAuthForm() {
+            document.getElementById('loginForm').style.display = 
+                document.getElementById('loginForm').style.display === 'none' ? 'block' : 'none';
+            document.getElementById('registerForm').style.display = 
+                document.getElementById('registerForm').style.display === 'none' ? 'block' : 'none';
+        }
+
+        function switchProfileTab(tab) {
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.profile-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(`${tab}Tab`).classList.add('active');
+        }
+
+        function sendChatMessage() {
+            if (typeof app !== 'undefined') {
+                const input = document.getElementById('chatInput');
+                const text = input.value;
+                if (text.trim()) {
+                    app.addChatMessage(text);
+                    input.value = '';
+                }
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                sendChatMessage();
+                event.preventDefault();
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: rgba(10, 10, 10, 0.95);
+                color: #ff9999;
+                padding: 1rem 1.5rem;
+                border: 1px solid #8b0000;
+                border-radius: 8px;
+                z-index: 10000;
+                font-family: 'Cinzel', serif;
+                box-shadow: 0 4px 20px rgba(255, 0, 0, 0.2);
+            `;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         // ===== SUPABASE SETUP =====
@@ -2208,6 +2405,27 @@
                     container.appendChild(div);
                 });
                 container.scrollTop = container.scrollHeight;
+            }
+
+            showPage(pageName) {
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                
+                // Sayfaya özel işlemler
+                if (pageName === 'library') {
+                    this.renderLibrary();
+                } else if (pageName === 'chat') {
+                    this.renderChat();
+                } else if (pageName === 'home') {
+                    this.filterAndSortStories();
+                }
+                
+                document.getElementById(pageName).classList.add('active');
+
+                // Modal'ları kapat
+                document.getElementById('authModal').classList.remove('show');
+                document.getElementById('addStoryModal').classList.remove('show');
             }
 
             toggleSaveStory(storyId) {
