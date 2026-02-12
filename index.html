@@ -1267,14 +1267,8 @@
                     });
                 }
                 
-                // currentUser yoksa admin olarak otomatik giriş yap
-                let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                if (!currentUser) {
-                    currentUser = this.users.find(u => u.username === 'admin') || 
-                    { username: 'admin', email: 'admin@forum.com', password: 'admin123', instagram: 'emirslmn_', github: 'ermirhansalman4' };
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                }
-                this.currentUser = currentUser;
+                // currentUser yoksa null - giriş yapması gerek
+                this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
                 
                 this.allStories = JSON.parse(localStorage.getItem('stories')) || this.getInitialStories();
                 this.stories = this.allStories.slice(); // Açıkça kopyala
