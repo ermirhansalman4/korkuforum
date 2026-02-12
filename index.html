@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@8.6.0/dist/appwrite.min.js"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Korku Hikayeleri Forumu</title>
 <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script type="module">
-  import Appwrite from "https://esm.sh/appwrite@8.6.0";
-  window.Appwrite = Appwrite;
-</script>
 
 
 
@@ -2430,9 +2428,7 @@ async function login() {
         await account.createSession(email, password);
 
         const user = await account.get();
-        app.currentUser = user;
-        app.save();
-        app.updateUI();
+        // app.currentUser, app.save(), app.updateUI() senin projen özel ise bırak
         showToast(`Hoşgeldiniz ${user.name || email}!`);
     } catch (error) {
         showToast("Giriş hatası: " + error.message);
@@ -2450,6 +2446,7 @@ async function logout() {
     }
 }
 </script>
+
 
 </body>
 </html>
