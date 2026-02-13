@@ -10,17 +10,16 @@
     <script defer src="https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js"></script>
     <!-- Appwrite SDK - Backup CDN -->
     <script defer>
-       if (!window.Appwrite) {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/appwrite@latest/dist/appwrite.min.js';
-    script.defer = true;
-    script.onerror = () => {
-        console.error('❌ Her iki CDN de başarısız. İnternet bağlantınızı kontrol edin.');
-        app.showNotification('Appwrite SDK yüklenemiyor. Sayfayı yenile veya VPN\'i kontrol et.', 'error');
-    };
-    document.head.appendChild(script);
-}
-
+        if (!window.Appwrite) {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/appwrite@latest/dist/appwrite.min.js';
+            script.defer = true;
+            script.onerror = () => {
+                console.error('❌ Appwrite SDK yükleme başarısız. İnternet bağlantınızı kontrol edin.');
+                // app tanımlanmadığında çalışma riski, log'da bildir
+            };
+            document.head.appendChild(script);
+        }
     </script>
     <!-- Script -->
     <script defer src="script.js"></script>
