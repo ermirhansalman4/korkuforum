@@ -12,8 +12,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js"></script>
     <!-- Appwrite SDK - Backup CDN -->
     <!-- Script -->
-    <script defer src="script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1/dist/iife/sdk.min.js"></script>
+     <script src="https://unpkg.com/appwrite@13.0.1/dist/iife/sdk.min.js"></script>
+     <script src="script.js"></script>
+
 </head>
 <body>
     <!-- Sidebar Navigasyon -->
