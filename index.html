@@ -1,27 +1,40 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Çığlıklar - Korku Hikayeleri Forumu</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>👻</text></svg>">
     <link rel="stylesheet" href="style.css">
-    <!-- Appwrite SDK - Primary CDN -->
-    <script defer src="https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js"></script>
-    <!-- Appwrite SDK - Backup CDN -->
-    <script defer>
-        if (!window.Appwrite) {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/appwrite@latest/dist/appwrite.min.js';
-            script.defer = true;
-            script.onerror = () => {
-                console.error('❌ Her iki CDN de başarısız. İnternet bağlantınızı kontrol edin.');
-            };
-            document.head.appendChild(script);
-        }
+   <script>
+    (function loadAppwrite() {
+        if (window.Appwrite) return initApp();
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js';
+        script.defer = true;
+
+        script.onload = () => {
+            console.log('✓ Appwrite SDK yüklendi');
+            initApp();
+        };
+
+        script.onerror = () => {
+            console.error('❌ Appwrite SDK yüklenemedi. İnternet bağlantısını veya VPN’i kontrol et.');
+            alert('Appwrite SDK yüklenemiyor. Sayfayı yenile veya VPN’i kontrol et.');
+        };
+
+        document.head.appendChild(script);
+    })();
+
+    function initApp() {
+        // SDK yüklendiğinde başlat
+        app.init();
+    }
     </script>
-    <!-- Script -->
-    <script defer src="script.js"></script>
+
 </head>
 <body>
     <!-- Sidebar Navigasyon -->
