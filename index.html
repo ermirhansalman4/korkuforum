@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çığlıklar - Korku Hikayeleri Forumu</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Appwrite SDK -->
+    <script async src="https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigasyon -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">🦇 ÇIGLIKLАР 🦇</h1>
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-link" data-page="home">🏠 Ana Sayfa</a>
+            <a href="#" class="nav-link" data-page="stories">📖 Hikayeler</a>
+            <a href="#" class="nav-link" data-page="chat" id="chatLink">💬 Chat</a>
+            <a href="#" class="nav-link" data-page="profile" id="profileLink">👤 Profilim</a>
+            <a href="#" class="nav-link" data-page="admin" id="adminLink" style="display: none;">⚙️ Admin</a>
+            <hr>
+            <a href="#" class="nav-link" data-page="auth" id="authLink">🔐 Giriş Yap</a>
+        </nav>
+
+        <!-- İletişim Bilgileri (Footer) -->
+        <div class="sidebar-footer">
+            <h3 class="contact-title">İletişim</h3>
+            <div class="contact-info">
+                <p><strong>📱 Instagram:</strong> <a href="https://instagram.com/emirslmn_" target="_blank">emirslmn_</a></p>
+                <p><strong>🐙 GitHub:</strong> <a href="https://github.com/ermirhansalman4" target="_blank">ermirhansalman4</a></p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Ana İçerik Alanı -->
+    <main class="main-content">
+        <!-- Kullanıcı Durumu Bar -->
+        <div class="top-bar" id="topBar">
+            <span id="userStatus">Giriş yapmamış</span>
+            <button id="logoutBtn" style="display: none;" class="btn btn-danger">Çıkış Yap</button>
+        </div>
+
+        <!-- Sayfa İçeriği -->
+        <div class="page-container">
+            <!-- Ana Sayfa -->
+            <section id="home-page" class="page active">
+                <div class="hero-section">
+                    <h1>🌙 Çığlıklar Forumuna Hoş Geldin 🌙</h1>
+                    <p>En ürkütücü hikayelerin evi. Korkunç deneyimlerini paylaş, başkalarının hikayelerini oku...</p>
+                    <button class="btn btn-primary" onclick="app.showPage('auth')" id="heroLoginBtn">Başla</button>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <h3 id="totalUsers">0</h3>
+                        <p>Kullanıcı</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalStories">0</h3>
+                        <p>Hikaye</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalMessages">0</h3>
+                        <p>Mesaj</p>
+                    </div>
+                </div>
+
+                <div class="featured-section" id="featuredSection">
+                    <h2>📚 Son Hikayeler</h2>
+                    <div id="featuredStories" class="stories-grid"></div>
+                </div>
+            </section>
+
+            <!-- Doğrulama Sayfası -->
+            <section id="auth-page" class="page">
+                <div class="auth-container">
+                    <!-- Giriş Formu -->
+                    <div id="loginForm" class="auth-form active-form">
+                        <h2>Giriş Yap 🔒</h2>
+                        <input type="email" id="loginEmail" placeholder="E-posta" required>
+                        <input type="password" id="loginPassword" placeholder="Şifre" required>
+                        <button class="btn btn-primary w-100" onclick="app.login()">Giriş Yap</button>
+                        <p class="text-center">Hesabın yok mu? <a href="#" onclick="app.toggleAuthForm(event)">Kayıt Ol</a></p>
+                    </div>
+
+                    <!-- Kayıt Formu -->
+                    <div id="registerForm" class="auth-form">
+                        <h2>Kayıt Ol 👻</h2>
+                        <input type="text" id="registerUsername" placeholder="Kullanıcı Adı" required>
+                        <input type="email" id="registerEmail" placeholder="E-posta" required>
+                        <input type="password" id="registerPassword" placeholder="Şifre" required>
+                        <input type="password" id="registerPasswordConfirm" placeholder="Şifre Onayla" required>
+                        <button class="btn btn-primary w-100" onclick="app.register()">Kayıt Ol</button>
+                        <p class="text-center">Zaten hesabın var mı? <a href="#" onclick="app.toggleAuthForm(event)">Giriş Yap</a></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hikayeler Sayfası -->
+            <section id="stories-page" class="page">
+                <div class="stories-header">
+                    <h2>📖 Hikayeler</h2>
+                    <div class="stories-controls">
+                        <input type="text" id="searchStories" placeholder="Hikaye veya yazar ara..." class="search-box">
+                        <button class="btn btn-secondary" onclick="app.toggleStoryForm()">+ Yeni Hikaye</button>
+                    </div>
+                </div>
+
+                <!-- Yeni Hikaye Formu -->
+                <div id="storyFormContainer" class="form-container" style="display: none;">
+                    <h3>Yeni Korku Hikayesi Paylaş</h3>
+                    <input type="text" id="storyTitle" placeholder="Başlık" required>
+                    <textarea id="storyContent" placeholder="Hikayen yazılı yaz..." rows="8" required></textarea>
+                    <div class="form-buttons">
+                        <button class="btn btn-primary" onclick="app.saveStory()">Paylaş</button>
+                        <button class="btn btn-secondary" onclick="app.toggleStoryForm()">İptal</button>
+                    </div>
+                </div>
+
+                <!-- Hikayeler Listesi -->
+                <div id="storiesList" class="stories-list"></div>
+            </section>
+
+            <!-- Chat Sayfası -->
+            <section id="chat-page" class="page">
+                <div class="chat-container">
+                    <h2>💬 Global Chat</h2>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" placeholder="Mesajını yaz..." class="chat-input">
+                        <button class="btn btn-primary" onclick="app.sendMessage()">Gönder</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profil Sayfası -->
+            <section id="profile-page" class="page">
+                <div class="profile-container">
+                    <!-- Profil Bilgileri -->
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar">👥</div>
+                        <div class="profile-info">
+                            <h2 id="profileUsername"></h2>
+                            <p id="profileEmail"></p>
+                            <div class="profile-stats">
+                                <div class="stat">
+                                    <span class="stat-number" id="profileStoryCount">0</span>
+                                    <span class="stat-label">Hikaye</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-number" id="profileLikeCount">0</span>
+                                    <span class="stat-label">Beğeni</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-number" id="profileJoinDate">-</span>
+                                    <span class="stat-label">Tarih</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="profileEditBtn"></div>
+                    </div>
+
+                    <!-- Profil Düzenleme Formu -->
+                    <div id="profileEditForm" class="form-container" style="display: none;">
+                        <h3>Profili Düzenle</h3>
+                        <input type="text" id="profileEditUsername" placeholder="Kullanıcı Adı">
+                        <input type="email" id="profileEditEmail" placeholder="E-posta">
+                        <div class="form-buttons">
+                            <button class="btn btn-primary" onclick="app.updateProfile()">Kaydet</button>
+                            <button class="btn btn-secondary" onclick="app.toggleProfileEdit()">İptal</button>
+                        </div>
+                    </div>
+
+                    <!-- Kullanıcının Hikyeleri -->
+                    <div class="profile-stories">
+                        <h3>📚 Paylaştığım Hikayeler</h3>
+                        <div id="userStories" class="stories-list"></div>
+                    </div>
+
+                    <!-- Kaydedilen Hikayeler -->
+                    <div class="profile-bookmarks" id="profileBookmarksSection" style="display: none;">
+                        <h3>🔖 Kaydedilen Hikayeler</h3>
+                        <div id="bookmarkedStories" class="stories-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Paneli -->
+            <section id="admin-page" class="page">
+                <div class="admin-container">
+                    <h2>⚙️ Admin Paneli</h2>
+                    
+                    <!-- Admin Stats -->
+                    <div class="admin-stats">
+                        <div class="stat-card">
+                            <h4>Toplam Kullanıcı</h4>
+                            <p id="adminUserCount">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Toplam Hikaye</h4>
+                            <p id="adminStoryCount">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Toplam Mesaj</h4>
+                            <p id="adminMessageCount">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Kısa Kutular -->
+                    <div class="admin-tabs">
+                        <button class="tab-btn active" onclick="app.showAdminTab('users')">Kullanıcılar</button>
+                        <button class="tab-btn" onclick="app.showAdminTab('stories')">Hikayeler</button>
+                        <button class="tab-btn" onclick="app.showAdminTab('messages')">Mesajlar</button>
+                    </div>
+
+                    <!-- Kullanıcılar Sekmesi -->
+                    <div id="adminUsersTab" class="admin-tab active">
+                        <h3>Kullanıcılar</h3>
+                        <div id="adminUsersList" class="admin-list"></div>
+                    </div>
+
+                    <!-- Hikayeler Sekmesi -->
+                    <div id="adminStoriesTab" class="admin-tab">
+                        <h3>Hikayeler</h3>
+                        <div id="adminStoriesList" class="admin-list"></div>
+                    </div>
+
+                    <!-- Mesajlar Sekmesi -->
+                    <div id="adminMessagesTab" class="admin-tab">
+                        <h3>Mesajlar</h3>
+                        <div id="adminMessagesList" class="admin-list"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Silme Onayı Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <h3>Emin Misin?</h3>
+            <p id="deleteConfirmMessage">Bu işlem kalıcıdır ve geri alınamaz.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="app.confirmDelete()">Sil</button>
+                <button class="btn btn-secondary" onclick="app.cancelDelete()">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bildirim -->
+    <div id="notification" class="notification"></div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
