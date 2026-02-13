@@ -18,6 +18,8 @@ const appwriteConfig = {
 let client, account, databases;
 let currentUser = null;
 let isInitialized = false;
+let initRetryCount = 0;
+const MAX_INIT_RETRIES = 50; // 5 saniye max (100ms * 50)
 
 // Ana Uygulama Nesnesi
 const app = {
@@ -26,9 +28,21 @@ const app = {
         try {
             // SDK'nın yüklenmesini bekle
             if (typeof Appwrite === 'undefined') {
-                setTimeout(() => this.init(), 100);
+                if (initRetryCount < MAX_INIT_RETRIES) {
+                    initRetryCount++;
+                    console.log(`⏳ SDK yükleniyor... (${initRetryCount}/${MAX_INIT_RETRIES})`);
+                    setTimeout(() => this.init(), 100);
+                } else {
+                    console.error('✗ SDK yükleme başarısız - Maksimum deneme aşıldı');
+                    console.error('  Kontrol et: İnternet bağlantısı, VPN, firewall, adblocker');
+                    app.showNotification('Appwrite SDK yüklenemiyor. Sayfayı yenile veya VPN\'i kontrol et.', 'error');
+
+                }
+
                 return;
             }
+
+            console.log('✓ SDK algılandı, başlatılıyor...');
 
             // Appwrite İstemcisini Başlat
             const { Client, Account, Databases } = Appwrite;
@@ -40,21 +54,36 @@ const app = {
                 .setEndpoint(appwriteConfig.endpoint)
                 .setProject(appwriteConfig.projectId);
 
+            // Başarılı initleme için isInitialized = true yap
             isInitialized = true;
+            console.log('✓ Appwrite istemcisi başlatıldı');
 
             // Mevcut oturumu kontrol et
-            await this.checkSession();
+            try {
+                await this.checkSession();
+                console.log('✓ Oturum kontrolü tamamlandı');
+            } catch (sessionError) {
+                console.warn('⚠ Oturum yüklemesi hatası (normal):', sessionError.message);
+            }
             
             // Event Listeners ekle
             this.setupEventListeners();
+            console.log('✓ Event listenerları eklendi');
             
-            // Sayfa ticarı yükle
-            await this.loadHomeStats();
+            // Sayfa istatistiklerini yükle (hata bloker değil)
+            try {
+                await this.loadHomeStats();
+                console.log('✓ Ana sayfa istatistikleri yüklendi');
+            } catch (statsError) {
+                console.warn('⚠ İstatistikler yüklemesi hatası:', statsError.message);
+            }
 
-            console.log('✓ Appwrite başarıyla başlatıldı');
+            console.log('✓✓✓ Appwrite başarıyla başlatıldı!');
+            this.showNotification('✓ Sistem hazır!', 'success');
         } catch (error) {
+            isInitialized = false;
             console.error('✗ Appwrite başlatma hatası:', error);
-            this.showNotification('Bağlantı hatası: Appwrite ayarlarını kontrol edin', 'error');
+            this.showNotification('Hata: ' + error.message, 'error');
         }
     },
 
