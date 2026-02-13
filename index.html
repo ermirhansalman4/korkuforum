@@ -8,32 +8,9 @@
     <title>Çığlıklar - Korku Hikayeleri Forumu</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>👻</text></svg>">
     <link rel="stylesheet" href="style.css">
-   <script>
-    (function loadAppwrite() {
-        if (window.Appwrite) return initApp();
+   <script src="https://unpkg.com/appwrite@13.0.1/dist/iife/sdk.min.js"></script>
+<script src="script.js"></script>
 
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/appwrite@latest/dist/appwrite.min.js';
-        script.defer = true;
-
-        script.onload = () => {
-            console.log('✓ Appwrite SDK yüklendi');
-            initApp();
-        };
-
-        script.onerror = () => {
-            console.error('❌ Appwrite SDK yüklenemedi. İnternet bağlantısını veya VPN’i kontrol et.');
-            alert('Appwrite SDK yüklenemiyor. Sayfayı yenile veya VPN’i kontrol et.');
-        };
-
-        document.head.appendChild(script);
-    })();
-
-    function initApp() {
-        // SDK yüklendiğinde başlat
-        app.init();
-    }
-    </script>
 
 </head>
 <body>
