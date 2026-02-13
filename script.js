@@ -102,6 +102,12 @@ const app = {
 
     // ===== Doğrulama İşlemleri =====
     login: async function() {
+        // Appwrite hazır mı kontrol et
+        if (!isInitialized || !account) {
+            this.showNotification('Sistem henüz hazırlanmıyor, lütfen bekleyin...', 'error');
+            return;
+        }
+
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
 
@@ -130,6 +136,12 @@ const app = {
     },
 
     register: async function() {
+        // Appwrite hazır mı kontrol et
+        if (!isInitialized || !account) {
+            this.showNotification('Sistem henüz hazırlanmıyor, lütfen bekleyin...', 'error');
+            return;
+        }
+
         const username = document.getElementById('registerUsername').value.trim();
         const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value;
@@ -1257,8 +1269,8 @@ const app = {
 };
 
 // ===== Uygulama Başlatma =====
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
+document.addEventListener('DOMContentLoaded', async () => {
+    await app.init();
 });
 
 // Bonus: Hata ele alma
